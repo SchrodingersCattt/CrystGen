@@ -1,0 +1,124 @@
+import numpy as np
+from collections import defaultdict
+from ase.io import read, write
+from ase import Atoms
+from ase.spacegroup import get_spacegroup
+import os
+from CifFile import CifFile
+from pymatgen.core.structure import Structure
+from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
+
+
+def get_lattice_parameters(cif):
+    a, b, c, alpha, beta, gamma = \
+        float(cif["_cell_length_a"].split('(')[0]), \
+        float(cif["_cell_length_b"].split('(')[0]), \
+        float(cif["_cell_length_c"].split('(')[0]), \
+        np.radians(float(cif["_cell_angle_alpha"].split('(')[0])), \
+        np.radians(float(cif["_cell_angle_beta"].split('(')[0])), \
+        np.radians(float(cif["_cell_angle_gamma"].split('(')[0]))
+   
+    lattice_matrix = np.array([
+        [a, b * np.cos(gamma), c * np.cos(beta)],
+        [0, b * np.sin(gamma), c * (np.cos(alpha) - np.cos(beta) * np.cos(gamma)) / np.sin(gamma)],
+        [0, 0, c * np.sqrt(1 - np.cos(alpha)**2 - np.cos(beta)**2 - np.cos(gamma)**2 + 2 * np.cos(alpha) * np.cos(beta) * np.cos(gamma))]
+    ])
+
+    return {
+        "lattice_params": [a, b, c, np.degrees(alpha), np.degrees(beta), np.degrees(gamma)],
+        "lattice_matrix":lattice_matrix
+        }
+        
+def get_occupancies(struct):
+    occupanies = []
+    for idx, ss in enumerate(struct):
+        occ = struct[idx].species.num_atoms
+        occupanies.append(occ)
+
+    return occupanies
+
+def get_symbols(struct):
+    symbols = []
+    for idx, ss in enumerate(struct):
+        sym = struct[idx].species.chemical_system
+        symbols.append(sym)
+
+    return symbols
+
+def get_atomic_coords(struct):    
+    positions = []
+    for idx, ss in enumerate(struct):
+        pos = struct[idx].coords
+        positions.append(pos)
+
+    return positions   
+
+def get_spacegroup_from_cif(cif):
+    return cif["_space_group_IT_number"]
+
+def group_elements(my_list):
+    result = defaultdict(list)
+    indices = defaultdict(list)
+
+    for i, item in enumerate(my_list):
+        result[item].append(item)
+        indices[item].append(i)
+
+    grouped_elements = list(map(list, result.values()))
+    grouped_indices = list(indices.values())
+
+    return grouped_elements, grouped_indices
+
+def unravel_disorder(cif, struct):
+    # lattice = get_lattice_parameters(cif)["lattice_matrix"]
+    symbols = get_symbols(struct)
+    occ = get_occupancies(struct)
+    coords = get_atomic_coords(struct)
+
+    splitted_occ, indices = group_elements(occ)
+    order_part_idx = []
+    disorder_parts_indices= []
+
+    for ii, sublist in enumerate(splitted_occ):
+        if 1.0 in sublist:
+            order_part_idx = indices[ii]
+        else:
+            disorder_parts_indices.append(indices[ii])    
+
+    return {
+        "order": order_part_idx,
+        "disorder": disorder_parts_indices
+    }
+
+def modify_struct(cif, struct):
+    order = unravel_disorder(cif, struct)["order"]
+    disorder = unravel_disorder(cif, struct)["disorder"]    
+    sg = int(get_spacegroup_from_cif(cif))
+    ase_ss = []
+
+    for idx, frag in enumerate(disorder):
+        fragment_idx = frag + order
+        pos = [get_atomic_coords(struct)[ii] for ii in fragment_idx]
+        ele = [get_symbols(struct)[ii] for ii in fragment_idx]
+        ss = Atoms(ele, pos)        
+        ss.set_cell(get_lattice_parameters(cif)["lattice_params"])
+
+        ase_ss.append(ss)
+
+    return ase_ss  # Object of Atoms() in ase
+
+def write_structure(cif, struct, output_filename):
+    
+    ase_ss = modify_struct(cif, struct)
+    for ii, ss in enumerate(ase_ss):
+        ss.write(f'{output_filename}_{ii}.cif', format="cif")
+        
+filename = '1984449.cif'
+struct = Structure.from_file(filename)
+cif_file = CifFile(filename)
+system_name = cif_file.keys()[0]
+cif = cif_file[system_name]
+
+# modify_struct(cif)
+write_structure(cif, struct, 'output')
+
