@@ -1,16 +1,22 @@
 from pymatgen.core import Structure
 import json
+import os
 
 class MoleculeIdentifier:
-    def __init__(self, radii_file, pm_to_angstrom=0.01, tol_factor=1.1):
+    def __init__(self, tol_factor=1.1):
+        _script_path = os.path.dirname(os.path.abspath(__file__))
+        radii_file = os.path.join(_script_path, "BASIC_DATA", "atomic_radius.json")
+        self.pm_to_angstrom = 0.01
         self.radii = self.load_radii(radii_file)
-        self.pm_to_angstrom = pm_to_angstrom
         self.tol_factor = tol_factor
 
     def load_radii(self, filename):
         with open(filename, 'r') as f:
             radii = json.load(f)
         return radii
+
+    def get_radii(self):
+        return self.radii
 
     def calc_distance(self, struct, ii, jj):
         return struct.get_distance(ii, jj)
