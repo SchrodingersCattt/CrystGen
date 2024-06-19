@@ -6,18 +6,18 @@ from mol_identifier import MoleculeIdentifier
 from chk_bonding import ChkBonding
 
 class MoleculeRotator:
-    def __init__(self, 
-                 input_file, 
-                 angle, 
-                 rotate_axes, 
+    def __init__(self,
+                 input_file,
+                 angle,
+                 rotate_axes,
                  num_replicas,
-                 tol_factor=1.1, 
+                 tol_factor=1.1,
                  intra_crit_dist=0.60,
-                 intra_crit_lo_ratio=0.95, 
+                 intra_crit_lo_ratio=0.95,
                  intra_crit_hi_ratio=1.05
                  ):
         self.input_file = input_file
-        self.struct = Structure.from_file(input_file)
+        self.orig_struct = Structure.from_file(input_file)
         self.angle = angle
         self.rotate_axes = rotate_axes
         self.num_replicas = num_replicas
@@ -28,7 +28,7 @@ class MoleculeRotator:
     def get_anchor(self, mol_site_idx):
         positions = []
         for idx in mol_site_idx:
-            pos = self.struct[idx].coords
+            pos = self.orig_struct[idx].coords
             positions.append(pos)
         anchor = np.array(positions).mean(axis=0)
         return anchor
@@ -38,7 +38,7 @@ class MoleculeRotator:
             if aa == 0:
                 continue
             angle = aa * self.deg_to_rad
-            new_struct = copy.deepcopy(self.struct)
+            new_struct = copy.deepcopy(self.orig_struct)
             new_struct.rotate_sites(mol_site_idx, angle, axis, anchor, to_unit_cell=False)
             file_name = self.input_file.split('.cif')[0]
             axis_str = "".join(str(x) for x in axis)
@@ -50,7 +50,7 @@ class MoleculeRotator:
                 new_struct.to(f"{directory}/POSCAR")
 
     def rotate_molecules(self):
-        self.molecules_site_indices = self.mol_identifier.find_molecules(self.struct)
+        self.molecules_site_indices = self.mol_identifier.find_molecules(self.orig_struct)
         for mol_idx, mol_site_idx in enumerate(self.molecules_site_indices):
             anchor = self.get_anchor(mol_site_idx)
             for axis in self.rotate_axes:

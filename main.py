@@ -1,11 +1,12 @@
 import argparse
 from mk_disturb import StructurePerturber
 from mk_rotation import MoleculeRotator
+from mk_supercell import CellExpander
 from unravel_disorder import DisorderUnraveller
 
 
 def parse_args():
-    parser = argparse.ArgumentParser(description='Molecular Structure Manipulation')
+    parser = argparse.ArgumentParser(description='Molecular Crystal Structure Manipulation')
 
     subparsers = parser.add_subparsers(dest='command', help='Available commands')
 
@@ -27,7 +28,15 @@ def parse_args():
                                help='Rotation axis directions')
     rotate_parser.add_argument('-n', '--number', type=int, default=10, help='Number of rotation replicas')
 
-    # Arguments for disorder_unraveller.py
+    # Arguments for mk_supercell.py
+    supercell_parser = subparsers.add_parser('supercell', help='Making supercell for structure')
+    supercell_parser.add_argument('-i', '--input', type=str, required=True, help='Input CIF file')
+    supercell_parser.add_argument('-s', '--supercellscale', type=int, required=False, help="""Maximum supercell scale, 
+                                    eg. if input 2, 2*2*2, 2*2*1, 2*1*2, etc will be created.""")
+    supercell_parser.add_argument('-l', '--supercelllist', nargs='+', type=int, required=False, help="""Supercell list,
+                                    eg. 2 2 2, which stands for 2*2*2 supercell.""")                              
+
+    # Arguments for unravel_disorder.py
     disorder_parser = subparsers.add_parser('disorder', help='Unravel disorder in structures')
     disorder_parser.add_argument('-i', '--input', type=str, required=True, help='Input CIF file')
     disorder_parser.add_argument('-o', '--output', type=str, required=True, help='Output filename prefix')
@@ -45,6 +54,9 @@ def main():
         rotate_axes = [list(map(int, args.rotate[i:i+3])) for i in range(0, len(args.rotate), 3)]
         rotator = MoleculeRotator(args.input, args.angle, rotate_axes, args.number)
         rotator.rotate_molecules()
+    elif args.command == 'supercell':
+        expander = CellExpander(args.input, args.supercellscale, args.supercelllist)
+        expander.expand_cells()
     elif args.command == 'disorder':
         unraveller = DisorderUnraveller(args.input)
         unraveller.write_structure(args.output)
