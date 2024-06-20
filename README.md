@@ -14,6 +14,9 @@ python main.py rotate -i example/Antipyrin_912076.cif -a 10 -n 2 -r 0 0 1
 - Supercell
 ```
 python main.py supercell -i example/Antipyrin_912076.cif -l 2 2 2 
+```
+or
+```
 python main.py supercell -i example/Antipyrin_912076.cif -s 2
 ```
 
