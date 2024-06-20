@@ -3,7 +3,7 @@
 ## Example:
 - Perturb and scale structures
 ```
-python main.py disturb -i example/Antipyrin_912076.cif -p 0.05 -s 0.1 -t 0.01 -n 10
+python main.py disturb -i example/Antipyrin_912076.cif -p 0.05 -s 0.1 -t 0.05 -n 10
 ```
 
 - Rotate molecules

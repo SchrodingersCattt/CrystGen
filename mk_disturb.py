@@ -35,7 +35,7 @@ class StructurePerturber:
             # Create a copy of the original structure
             new_struct = copy.deepcopy(self.orig_structure)
             new_struct.perturb(self.perturb)
-            if self.chk_bonding.pass_checking(new_struct, self.molecules_site_indices):
+            if self.chk_bonding.pass_checking(self.orig_structure, new_struct, self.molecules_site_indices):
                 directory = f'{sys_name}_disturbed/{sys_name}_perturb_{self.perturb}_{ii}'
                 if not os.path.exists(directory):
                     os.makedirs(directory)
@@ -56,7 +56,7 @@ class StructurePerturber:
             # Create a copy of the original structure
             new_struct = copy.deepcopy(self.orig_structure)
             new_struct.scale_lattice(volume * scale)
-            if self.chk_bonding.pass_checking(new_struct, self.molecules_site_indices):
+            if self.chk_bonding.pass_checking(self.orig_structure, new_struct, self.molecules_site_indices):
                 directory = f'{sys_name}_disturbed/{sys_name}_scale_{scale:.2f}'
                 if not os.path.exists(directory):
                     os.makedirs(directory)
@@ -84,7 +84,7 @@ class StructurePerturber:
             # Create a copy of the original structure
             new_struct = copy.deepcopy(self.orig_structure)
             new_struct.lattice = new_lattice
-            if self.chk_bonding.pass_checking(new_struct, self.molecules_site_indices):
+            if self.chk_bonding.pass_checking(self.orig_structure, new_struct, self.molecules_site_indices):
                 directory = f'{sys_name}_disturbed/{sys_name}_tilt_{ii}'
                 if not os.path.exists(directory):
                     os.makedirs(directory)

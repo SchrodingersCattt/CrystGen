@@ -34,6 +34,7 @@ class MoleculeRotator:
         return anchor
 
     def rot_mol(self, mol_idx, mol_site_idx, axis, anchor):
+        print(axis)
         for aa in range(int(-1 * self.angle), int(self.angle + 1), int(self.angle / (self.num_replicas / 2))):
             if aa == 0:
                 continue
@@ -43,8 +44,10 @@ class MoleculeRotator:
             file_name = self.input_file.split('.cif')[0]
             axis_str = "".join(str(x) for x in axis)
             directory = f"{file_name}_rot/mol_{mol_idx}__axis_{axis_str}__rot_{aa}deg"
-            print(directory, self.chk_bonding.pass_checking(new_struct, self.molecules_site_indices))
-            if self.chk_bonding.pass_checking(new_struct, self.molecules_site_indices):
+
+            checking_result = self.chk_bonding.pass_checking(self.orig_struct, new_struct, self.molecules_site_indices)
+            print(directory, checking_result)
+            if checking_result == True:
                 if not os.path.exists(directory):
                     os.makedirs(directory)
                 new_struct.to(f"{directory}/POSCAR")
