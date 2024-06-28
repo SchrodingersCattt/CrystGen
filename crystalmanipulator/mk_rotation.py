@@ -2,8 +2,9 @@ from pymatgen.core.structure import Structure
 import numpy as np
 import os
 import copy
-from mol_identifier import MoleculeIdentifier
-from chk_bonding import ChkBonding
+
+from crystalmanipulator.mol_identifier import MoleculeIdentifier
+from crystalmanipulator.chk_bonding import ChkBonding
 
 class MoleculeRotator:
     def __init__(self,

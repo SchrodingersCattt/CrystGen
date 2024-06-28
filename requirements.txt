@@ -1,5 +1,4 @@
 ase==3.23.0
-numpy==1.24.3
 PyCifRW==4.4.6
 pymatgen==2024.6.10
 pymatgen_analysis_defects==2023.8.22

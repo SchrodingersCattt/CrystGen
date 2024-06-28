@@ -1,8 +1,8 @@
 import argparse
-from mk_disturb import StructurePerturber
-from mk_rotation import MoleculeRotator
-from mk_supercell import CellExpander
-from unravel_disorder import DisorderUnraveller
+from crystalmanipulator.mk_disturb import StructurePerturber
+from crystalmanipulator.mk_rotation import MoleculeRotator
+from crystalmanipulator.mk_supercell import CellExpander
+from crystalmanipulator.unravel_disorder import DisorderUnraveller
 
 
 def parse_args():

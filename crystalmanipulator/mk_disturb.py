@@ -3,8 +3,9 @@ import random
 import numpy as np
 import copy
 from pymatgen.core import Structure
-from mol_identifier import MoleculeIdentifier
-from chk_bonding import ChkBonding
+
+from crystalmanipulator.mol_identifier import MoleculeIdentifier
+from crystalmanipulator.chk_bonding import ChkBonding
 
 class StructurePerturber:
     def __init__(
@@ -16,8 +17,8 @@ class StructurePerturber:
         num_replicas,
         tol_factor=1.1,
         intra_crit_dist=0.60,
-        intra_crit_lo_ratio=0.95,
-        intra_crit_hi_ratio=1.05
+        intra_crit_lo_ratio=0.9,
+        intra_crit_hi_ratio=1.1
     ):
         self.input_file = input_file
         self.orig_structure = Structure.from_file(input_file)

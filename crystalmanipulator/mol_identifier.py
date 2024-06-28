@@ -1,6 +1,8 @@
 from pymatgen.core import Structure
+from multiprocessing import Pool
 import json
 import os
+import time
 
 class MoleculeIdentifier:
     def __init__(self, tol_factor=1.1):
@@ -31,6 +33,7 @@ class MoleculeIdentifier:
         return dist < bond_length * self.tol_factor
 
     def find_molecules(self, struct):
+        ss = time.time()
         molecules_site_indices = []
         visited = set()
 
@@ -49,5 +52,6 @@ class MoleculeIdentifier:
                             stack.append(k)
 
                 molecules_site_indices.append(molecule)
-
+        ee = time.time()
+        print("find mol", ee - ss)
         return molecules_site_indices
