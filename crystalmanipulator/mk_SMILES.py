@@ -84,7 +84,7 @@ def calculate_molecule_com(struct, mol_indices):
         site = struct[idx]
         mass = site.specie.atomic_mass
         total_mass += mass
-        weighted_coords += mass * site.coords
+        weighted_coords += float(mass) * site.coords
     
     return weighted_coords / total_mass
 
