@@ -18,7 +18,7 @@ class MoleculeRotator:
                  intra_crit_hi_ratio=1.05
                  ):
         self.input_file = input_file
-        self.orig_struct = Structure.from_file(input_file)
+        self.orig_struct = Structure.from_file(input_file, primitive=False)
         self.angle = angle
         self.rotate_axes = rotate_axes
         self.num_replicas = num_replicas

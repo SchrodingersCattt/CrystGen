@@ -9,18 +9,16 @@ import time
 
 from crystalmanipulator.mol_identifier import MoleculeIdentifier
 
-struct_file = "/123/PX/px483/PX483.cif"
-struct = Structure.from_file(struct_file)
 
-#struct = Structure.from_file("/123/gmy_data/TOOLS_IN_DEV/CrystGen/example/Antipyrin_912076.cif")
-crys_coords = struct.cart_coords
-crys_lattice = struct.lattice
-crys_species = struct.species
-mm = MoleculeIdentifier()
+MAX_DISTANCE_THRESHOLD = 3.5
 
-MAX_DISTANCE_THRESHOLD = 3.8
-
-def search_molecules_in_crystal(struct):
+def search_molecules_in_crystal(struct_file):
+    """
+    input: cif file or POSCAR
+    output: list: pymatgen Molecule
+    """
+    mm = MoleculeIdentifier()
+    struct = Structure.from_file(struct_file)
     ss1 = time.time()
     mols = []
     molecules_site_indices = mm.find_molecules(struct)
@@ -53,20 +51,27 @@ def search_molecules_in_crystal(struct):
     print([len(ll) for ll in mols])
     return mols
 
-mols = search_molecules_in_crystal(struct)
-
-
-for idx, mol in enumerate(mols):   
-
-    mol.to(f"tmp.mol")
-    stringWithMolData = open(f"tmp.mol", 'r').read()
+def mol2smiles(mol):
+    mol_file = save_mol(mol)
+    stringWithMolData = open(mol_file, 'r').read()
     rdkit_mol = Chem.MolFromMolBlock(stringWithMolData, sanitize=False)
-    # Check if rdkit_mol is None before calling Chem.MolToSmiles
-    if rdkit_mol is None:
-        print("Error: Invalid or empty molecule object")
-    else:
-        try:
-            smiles = Chem.MolToSmiles(rdkit_mol)
-            print(f"SMILES: {smiles}")
-        except ValueError as e:
-            print(f"Error converting molecule to SMILES: {e}")
+    try:
+        smiles = Chem.MolToSmiles(rdkit_mol)
+        return smiles
+
+    except ValueError as e:
+        print(f"Error converting molecule to SMILES: {e}")
+        return None
+
+def save_mol(mol, mol_file="temp.mol"):
+    mol.to(mol_file)  
+    return mol_file
+
+
+if __name__ == '__main__':
+    struct_file = "/123/guomingyu/CrystalPhilately/20240701/PAP-H5/PAP-H5_disorder_unravelled/_replica_0/POSCAR"
+    mols = search_molecules_in_crystal(struct_file)
+    
+    for idx, mol in enumerate(mols):
+        save_mol(mol)
+        smiles = mol2smiles(mol)

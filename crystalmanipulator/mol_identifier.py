@@ -7,7 +7,7 @@ import time
 class MoleculeIdentifier:
     def __init__(self, tol_factor=1.1):
         _script_path = os.path.dirname(os.path.abspath(__file__))
-        radii_file = os.path.join(_script_path, "BASIC_DATA", "atomic_radius.json")
+        radii_file = os.path.join(_script_path, "../BASIC_DATA", "atomic_radius.json")
         self.pm_to_angstrom = 0.01
         self.radii = self.load_radii(radii_file)
         self.tol_factor = tol_factor
