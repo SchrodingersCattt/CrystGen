@@ -1,8 +1,9 @@
+import numpy as np
 from pymatgen.core import Structure
-from multiprocessing import Pool
 import json
 import os
 import time
+
 
 class MoleculeIdentifier:
     def __init__(self, tol_factor=1.1):
@@ -20,38 +21,65 @@ class MoleculeIdentifier:
     def get_radii(self):
         return self.radii
 
-    def calc_distance(self, struct, ii, jj):
-        return struct.get_distance(ii, jj)
+    def calc_distance_matrix(self, struct):
+        
+        ss = time.time()
+        # Get all fractional coordinates in the structure
+        #frac_coords = np.array([site.frac_coords for site in struct])
 
-    def calc_bond(self, struct, i, j):
-        dist = self.calc_distance(struct, i, j)
-        elem_i = struct.species[i].name
-        elem_j = struct.species[j].name
-        cov_radius_i = self.radii[elem_i] * self.pm_to_angstrom
-        cov_radius_j = self.radii[elem_j] * self.pm_to_angstrom
-        bond_length = cov_radius_i + cov_radius_j
-        return dist < bond_length * self.tol_factor
+        # Calculate and return the pairwise distance matrix considering PBC
+        dist_matrix = np.array(
+            [[struct.get_distance(i, j) for j in range(len(struct))] for i in range(len(struct))]
+        )
+        ee = time.time()
+        print("find mollll", ee - ss)
+        return dist_matrix
+
+    def calc_bond_matrix(self, struct):
+        # Calculate the distance matrix
+        dist_matrix = self.calc_distance_matrix(struct)
+        # Get the radii for each element in the structure
+        cov_radii = np.array([self.radii[elem.name] * self.pm_to_angstrom for elem in struct.species])
+
+        # Calculate bond length matrix
+        bond_length_matrix = self.tol_factor * (cov_radii[:, None] + cov_radii[None, :])
+
+        # Determine where bonds are formed
+        bond_matrix = dist_matrix < bond_length_matrix
+        return bond_matrix
 
     def find_molecules(self, struct):
-        ss = time.time()
+
+        # Initialize an empty list to store molecular site indices
         molecules_site_indices = []
-        visited = set()
 
+        # Initialize an all-false array indicating visited sites
+        visited = np.zeros(len(struct), dtype=bool)
+
+        # Get the bond matrix
+        bond_matrix = self.calc_bond_matrix(struct)
+
+        # Identify molecules using bond matrix
         for i in range(len(struct)):
-            if i not in visited:
-                molecule = [i]
-                visited.add(i)
-                stack = [i]
+            if not visited[i]:
+                # List to accumulate the atoms belonging to the same molecule
+                molecule = []
 
-                while stack:
-                    j = stack.pop()
-                    for k in range(len(struct)):
-                        if k not in visited and self.calc_bond(struct, j, k):
-                            molecule.append(k)
-                            visited.add(k)
-                            stack.append(k)
+                # Use a queue to explore connected molecules
+                queue = [i]
+                visited[i] = True
+
+                while queue:
+                    current = queue.pop(0)
+                    molecule.append(current)
+
+                    # Find all unvisited neighbors
+                    neighbors = np.where(bond_matrix[current] & ~visited)[0]
+                    queue.extend(neighbors)
+
+                    # Mark those neighbors as visited
+                    visited[neighbors] = True
 
                 molecules_site_indices.append(molecule)
-        ee = time.time()
-        print("find mol", ee - ss)
+
         return molecules_site_indices

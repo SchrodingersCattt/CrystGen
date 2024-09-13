@@ -9,20 +9,20 @@ import time
 
 from crystalmanipulator.mol_identifier import MoleculeIdentifier
 
-
-MAX_DISTANCE_THRESHOLD = 3.5
-
-def search_molecules_in_crystal(struct_file):
+def search_molecules_in_crystal(struct_file, tol_factor=1.1):
     """
     input: cif file or POSCAR
     output: tuple: (list of pymatgen Molecule, list of original site indices)
     """
-    mm = MoleculeIdentifier()
-    struct = Structure.from_file(struct_file)
+    mm = MoleculeIdentifier(tol_factor=tol_factor)
+        
+    if isinstance(struct_file, Structure):
+        struct = struct_file
+    else:
+        struct = Structure.from_file(struct_file)
     mols = []
     original_indices = []
     molecules_site_indices = mm.find_molecules(struct)
-    
     for mol_indices in molecules_site_indices:
         imaged_sites = []
         added_indices = set()
@@ -66,7 +66,7 @@ def mol2smiles(mol):
         return None
 
 def save_mol(mol, mol_file="temp.mol"):
-    mol.to(mol_file)  
+    mol.to(mol_file)
     return mol_file
 
 def calculate_molecule_com(struct, mol_indices):
@@ -101,7 +101,7 @@ def get_molecules_com(struct_file):
 
 if __name__ == '__main__':
     struct_file = "/123/guomingyu/CrystalPhilately/20240701/PAP-H5/PAP-H5_disorder_unravelled/_replica_0/POSCAR"
-    mols = search_molecules_in_crystal(struct_file)
+    mols, _ = search_molecules_in_crystal(struct_file, tol_factor=1.1)
     
     for idx, mol in enumerate(mols):
         save_mol(mol)
